@@ -57,11 +57,16 @@ while True:
 
     elif message[0] == b'download':
         filename = message[1].decode('utf-8')
-        
-        with open('/home/gustavo/files/'+filename, 'rb') as f:
-            socket.send_multipart(['ok'.encode('utf-8'), f.read()])
-            print("download")
-            #socket.send_multipart[['Error!'.encode('utf-8')]]
+
+        content = os.listdir("/home/gustavo/files")
+
+        if(filename in content):        
+            with open('/home/gustavo/files/'+filename, 'rb') as f:
+                socket.send_multipart(['ok'.encode('utf-8'), f.read()])
+                print("download")
+                #socket.send_multipart[['Error!'.encode('utf-8')]]
+        else:
+            socket.send_multipart(['Error!'.encode('utf-8'), 'El archivo no se encuentra'.encode('utf-8')])
     else:
-        print("Error!!")
+        print("Error!!")        
         socket.send_string("Error")

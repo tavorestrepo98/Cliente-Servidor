@@ -33,13 +33,16 @@ elif cmd == 'list':
 elif cmd == 'download':
     filename = sys.argv[2]
     socket.send_multipart([b"download", filename.encode('utf-8')])
-
     resp = socket.recv_multipart()
     if(resp[0].decode('utf-8') == 'ok'):
         downFile = resp[1]
         with open('/home/gustavo/FilesDownload/'+filename, 'wb') as f:
             f.write(resp[1])
             print('{} download'.format(filename))
+    elif(resp[0].decode('utf-8') == 'Error!'):
+        print(resp[1].decode('utf-8')+' en el servidor') 
+    else:
+        print("Ha ocurrido un error!")
 
 else:
     print("Error!")

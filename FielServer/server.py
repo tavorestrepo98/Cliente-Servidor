@@ -1,6 +1,15 @@
 import os
 import zmq
 
+def filesName():
+    contenido = os.listdir("/home/gustavo/files")
+    listado = []
+    for l in contenido:
+        listado.append(l.encode('utf-8')) 
+
+    return listado
+
+
 context = zmq.Context()
 
 socket = context.socket(zmq.REP)
@@ -21,17 +30,31 @@ while True:
         filename = message[1].decode('utf-8')
         print(filename + " Upload")
 
-        with open('/home/gustavo/files/'+filename, 'wb') as f:
-            f.write(message[2])
-        socket.send_string("Listo!! "+filename+" subido")
-    elif message[0] == b'list':
-        contenido = os.listdir("/home/gustavo/files")
-        print(contenido)
-        listado = []
-        for l in contenido:
-            listado.append(l.encode('utf-8'))
+        #buscamos los nombres que hay en la carpeta
+        content = os.listdir("/home/gustavo/files")
 
-        socket.send_multipart(listado)
+        #si el nombre existe, cambio el nombre
+        if(filename in content):
+            filename2 = filename
+            parts = filename.split('.')
+            i = 1
+            while(filename2 in content):
+                filename2 = parts[0]+"("+str(i)+")."+parts[1]
+                i = i+1
+
+            with open('/home/gustavo/files/'+filename2, 'wb') as f:
+                f.write(message[2])
+                socket.send_string(filename2)
+
+        else:            
+            with open('/home/gustavo/files/'+filename, 'wb') as f:
+                f.write(message[2])
+                socket.send_multipart(filename.encode('utf-8'))
+
+    elif message[0] == b'list':
+        names = filesName()      
+        socket.send_multipart(names)
+
     elif message[0] == b'download':
         filename = message[1].decode('utf-8')
         

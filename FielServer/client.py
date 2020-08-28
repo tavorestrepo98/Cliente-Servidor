@@ -16,7 +16,7 @@ if cmd == 'upload':
         bytes = f.read()
         socket.send_multipart([b"upload", filename.encode('utf-8'), bytes])
         resp = socket.recv_string()
-        print(resp)
+        print("Subido con el siguiente nombre: " + resp)
 
 elif cmd == 'list':
     print("Listar!!!")

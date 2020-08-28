@@ -49,7 +49,7 @@ while True:
         else:            
             with open('/home/gustavo/files/'+filename, 'wb') as f:
                 f.write(message[2])
-                socket.send_multipart(filename.encode('utf-8'))
+                socket.send_string(filename)
 
     elif message[0] == b'list':
         names = filesName()      

@@ -1,8 +1,11 @@
 import os
 import zmq
 
-def filesName():
-    contenido = os.listdir("/home/gustavo/files")
+path = "/home/gustavo/files"
+
+
+def filesName(username):
+    contenido = os.listdir(path + "/" + username)
     listado = []
     for l in contenido:
         listado.append(l.encode('utf-8')) 
@@ -28,45 +31,58 @@ while True:
     if message[0] == b'upload':
         #Client wants to upload a file
         filename = message[1].decode('utf-8')
-        print(filename + " Upload")
-
+        username = message[3].decode('utf-8')
         #buscamos los nombres que hay en la carpeta
-        content = os.listdir("/home/gustavo/files")
+        content = os.listdir(path)
 
-        #si el nombre existe, cambio el nombre
-        if(filename in content):
-            filename2 = filename
-            parts = filename.split('.')
-            i = 1
-            while(filename2 in content):
-                filename2 = parts[0]+"("+str(i)+")."+parts[1]
-                i = i+1
+        #verificamos que sí está el username
+        if(username in content):
+            content2 = os.listdir(path + "/" + username)
+            #si el nombre existe, cambio el nombre
+            if(filename in content2):
+                socket.send_string("El archivo ya existe, por favor cambie el nombre")
+            else:            
+                with open(path + "/" + username + "/" + filename, 'wb') as f:
+                    f.write(message[2])
+                    socket.send_string(filename + " subido")
+        else:
+            os.mkdir(path + "/" + username)
+            with open(path + "/" + username + "/" + filename, 'wb') as f:
+                    f.write(message[2])
+                    socket.send_string(filename + " subido")
 
-            with open('/home/gustavo/files/'+filename2, 'wb') as f:
-                f.write(message[2])
-                socket.send_string(filename2)
-
-        else:            
-            with open('/home/gustavo/files/'+filename, 'wb') as f:
-                f.write(message[2])
-                socket.send_string(filename)
+            
 
     elif message[0] == b'list':
-        names = filesName()      
-        socket.send_multipart(names)
+        username = message[1].decode('utf-8')
+
+        content = os.listdir(path)
+
+        if(username in content):
+            names = filesName(username)      
+            socket.send_multipart(names)
+        else: 
+            socket.send_multipart(["Error".encode('utf-8')])        
 
     elif message[0] == b'download':
         filename = message[1].decode('utf-8')
+        username = message[2].decode('utf-8')
 
-        content = os.listdir("/home/gustavo/files")
+        content = os.listdir(path)
 
-        if(filename in content):        
-            with open('/home/gustavo/files/'+filename, 'rb') as f:
-                socket.send_multipart(['ok'.encode('utf-8'), f.read()])
-                print("download")
-                #socket.send_multipart[['Error!'.encode('utf-8')]]
+        #Si está la carpeta del usuario
+        if(username in content):
+            content2 = os.listdir(path + "/" + username)
+
+            #if para verificar si el archivo existe en el servidor
+            if(filename in content2):        
+                with open(path + "/" + username + "/" +filename, 'rb') as f:
+                    socket.send_multipart(['ok'.encode('utf-8'), f.read()])
+                    print("download")
+            else:
+                socket.send_multipart(["Error!".encode('utf-8'), "El archivo no se encuentra en la carpeta del usuario ".encode('utf-8')])
         else:
-            socket.send_multipart(['Error!'.encode('utf-8'), 'El archivo no se encuentra'.encode('utf-8')])
+            socket.send_multipart(["Error2!".encode('utf-8'), "No existe el usuario ".encode('utf-8')])
     else:
         print("Error!!")        
         socket.send_string("Error")

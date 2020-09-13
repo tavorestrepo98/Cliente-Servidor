@@ -40,7 +40,9 @@ while True:
             content2 = os.listdir(path + "/" + username)
             #si el nombre existe, cambio el nombre
             if(filename in content2):
-                socket.send_string("El archivo ya existe, por favor cambie el nombre")
+                with open(path + "/" + username + "/" + filename, 'ab') as f:
+                    f.write(message[2])
+                    socket.send_string(filename + " subido")
             else:            
                 with open(path + "/" + username + "/" + filename, 'wb') as f:
                     f.write(message[2])
@@ -50,8 +52,6 @@ while True:
             with open(path + "/" + username + "/" + filename, 'wb') as f:
                     f.write(message[2])
                     socket.send_string(filename + " subido")
-
-            
 
     elif message[0] == b'list':
         username = message[1].decode('utf-8')

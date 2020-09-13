@@ -13,11 +13,14 @@ if cmd == 'upload':
     filename = sys.argv[2]
     username = sys.argv[3]
     print("subiendo {}".format(filename))
+    partsize = 1024*100 #100kb
     with open("/home/gustavo/"+filename, 'rb') as f:
-        bytes = f.read()
-        socket.send_multipart([b"upload", filename.encode('utf-8'), bytes, username.encode('utf-8')])
-        resp = socket.recv_string()
-        print("Respuesta: " + resp)
+        while bytes:
+            bytes = f.read(partsize)
+            socket.send_multipart([b"upload", filename.encode('utf-8'), bytes, username.encode('utf-8')])
+            resp = socket.recv_string()
+            print("Respuesta: " + resp)
+    print("Done!!!")
 
 elif cmd == 'list':
     username = sys.argv[2]

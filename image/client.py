@@ -9,6 +9,8 @@ socket.connect("tcp://localhost:5555")
 
 with open("/home/gustavo/pepino.jpg", "rb") as f:
     bytesImage = f.read()
+    print(type(bytesImage))
+    print(bytesImage)
     socket.send(bytesImage)
 
     resp = socket.recv_string()

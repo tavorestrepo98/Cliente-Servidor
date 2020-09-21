@@ -1,7 +1,21 @@
 import os
 import zmq
+import json
 
 path = "/home/gustavo/files"
+
+#Lee la data del archivo data.json 
+def readJson():
+    data = {}
+    with open(path + "/data.json", "r") as f:
+        data = json.load(f)
+    
+    return data
+
+#Escribe la data en el archivo data.json
+def writeJson(data):
+    with open(path + "/data.json", "w") as f:
+        json.dump(data, f, indent=4)
 
 
 def filesName(username):
@@ -48,6 +62,7 @@ while True:
                     f.write(message[2])
                     socket.send_string(filename + " subido")
         else:
+            print("Hago la carpeta")
             os.mkdir(path + "/" + username)
             with open(path + "/" + username + "/" + filename, 'wb') as f:
                     f.write(message[2])
@@ -83,6 +98,52 @@ while True:
                 socket.send_multipart(["Error!".encode('utf-8'), "El archivo no se encuentra en la carpeta del usuario ".encode('utf-8')])
         else:
             socket.send_multipart(["Error2!".encode('utf-8'), "No existe el usuario ".encode('utf-8')])
+    elif message[0] == b'verificationUpload':
+        hashName = message[1].decode('utf-8')
+        filename = message[2].decode('utf-8')
+        username = message[3].decode('utf-8')
+
+        data = readJson()
+        users = list(data.keys())
+        if(username in users):
+            if((filename in data[username]['fileName']) and (hashName in data[username]['hashName'])):
+                socket.send_multipart('1'.encode('utf-8'))
+            elif(not(filename in data[username]['fileName']) and (hashName in data[username]['hashName'])):
+                data[username]['fileName'].append(filename)
+                writeJson(data)
+                socket.send_multipart('2'.encode('utf-8'))
+            elif((filename in data[username]['fileName']) and not(hashName in data[username]['hashName'])):
+                nombre = filename
+                splt = nombre.split(".")
+                i = 1
+                while nombre in data[username]['fileName']:
+                    nombre = splt[0]+'('+str(i)+').'+splt[1]
+                    i += 1
+                filename = nombre
+                data[username]['fileName'].append(nombre)
+                data[username]['hashName'].append(hashName)
+                writeJson(data)
+                socket.send_multipart('3'.encode('utf-8'), filename.encode('utf-8'))
+
+
+            elif(not(filename in data[username]['fileName']) and not(hashName in data[username]['hashName'])):
+                data[username]['fileName'].append(filename)
+                data[username]['hashName'].append(hashName)
+                writeJson(data)
+                socket.send_multipart('4'.encode('utf-8'))
+            else:
+                print("Error!!")
+                socket.send_multipart('Error'.encode('utf-8'))
+        else:
+            data[username] = {
+                'fileName':[],
+                'hashName':[]
+            }
+
+            data[username]['fileName'].append(filename)
+            data[username]['hashName'].append(hashName)
+            writeJson(data)
+            socket.send_multipart('5'.encode('utf-8'))
     else:
         print("Error!!")        
         socket.send_string("Error")
